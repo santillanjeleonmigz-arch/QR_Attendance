@@ -3,61 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class Attendance System</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <title>Class Attendance</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f2f5; }
-        .card { max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        #master-qr { margin: 20px auto; display: flex; justify-content: center; min-height: 200px; align-items: center; border: 2px solid #1a73e8; border-radius: 15px; }
-        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
-        button { background: #28a745; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; cursor: pointer; }
-        #status { display: none; color: #28a745; font-weight: bold; margin-top: 15px; }
+        /* Modern Design */
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            margin: 0; 
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); 
+        }
+        .container { 
+            background: white; 
+            padding: 40px; 
+            border-radius: 15px; 
+            box-shadow: 0 15px 35px rgba(0,0,0,0.2); 
+            text-align: center; 
+            width: 100%; 
+            max-width: 350px; 
+        }
+        h1 { color: #333; margin-bottom: 10px; font-size: 24px; }
+        p { color: #666; margin-bottom: 25px; font-size: 14px; }
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin-bottom: 20px; 
+            border: 2px solid #eee; 
+            border-radius: 8px; 
+            font-size: 16px; 
+            box-sizing: border-box; 
+            transition: border-color 0.3s;
+        }
+        input:focus { border-color: #667eea; outline: none; }
+        button { 
+            background: #667eea; 
+            color: white; 
+            border: none; 
+            padding: 15px; 
+            border-radius: 8px; 
+            width: 100%; 
+            font-weight: bold; 
+            font-size: 16px; 
+            cursor: pointer; 
+            transition: background 0.3s;
+        }
+        button:hover { background: #5a67d8; }
+        #status { 
+            display: none; 
+            margin-top: 20px; 
+            padding: 10px; 
+            background: #e8f5e9; 
+            color: #2e7d32; 
+            border-radius: 5px; 
+            font-weight: bold; 
+        }
     </style>
 </head>
 <body>
 
-<div class="card">
+<div class="container">
     <h1>Class Attendance</h1>
-    <div id="master-qr">Generating QR Code...</div>
-    <div id="status">✅ Attendance Sent!</div>
-    <input type="text" id="studentName" placeholder="Enter Full Name">
-    <button onclick="submitAttendance()">SUBMIT ATTENDANCE</button>
+    <p>Please enter your full name to sign in.</p>
+    
+    <div id="status">✅ Attendance Recorded!</div>
+    
+    <input type="text" id="studentName" placeholder="Full Name" autocomplete="off">
+    <button onclick="submitAttendance()">Submit Attendance</button>
 </div>
 
 <script>
-    // 1. Gagawa ng QR Code para sa website mo
-    function generateQR() {
-        const qrBox = document.getElementById("master-qr");
-        const url = window.location.origin + window.location.pathname;
-        if (typeof QRCode !== "undefined") {
-            qrBox.innerHTML = "";
-            new QRCode(qrBox, { text: url, width: 200, height: 200 });
-        } else { setTimeout(generateQR, 1000); }
-    }
-    generateQR();
-
-    // 2. Pag-save sa Google Sheets
     async function submitAttendance() {
         const nameInput = document.getElementById('studentName');
         const name = nameInput.value.trim();
-        if (!name) return alert("Please type your name!");
+        const status = document.getElementById('status');
 
-        // Ang iyong Google URL
+        if (!name) return alert("Please enter your name!");
+
+        // Your Google Web App URL
         const scriptURL = 'https://script.google.com/macros/s/AKfycbwUzvDtWs0E6ADAoRlBEqPgxxueDDtZvQt4gS4ERJ8X_HAcFCe6HTArRMpdyA3pRZlb/exec';
 
         try {
+            // Sending data to Google Sheets
             await fetch(scriptURL, {
                 method: 'POST',
                 mode: 'no-cors',
+                cache: 'no-cache',
                 body: JSON.stringify({ name: name })
             });
+            
+            // UI Feedback
             nameInput.value = "";
-            document.getElementById('status').style.display = "block";
-            setTimeout(() => { document.getElementById('status').style.display = "none"; }, 4000);
-        } catch (e) {
-            alert("Error: " + e.message);
+            status.style.display = "block";
+            setTimeout(() => { status.style.display = "none"; }, 5000);
+            
+        } catch (error) {
+            console.error("Error!", error.message);
+            alert("Connection error. Please try again.");
         }
     }
 </script>
+
 </body>
 </html>
