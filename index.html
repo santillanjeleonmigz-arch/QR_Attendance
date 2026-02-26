@@ -6,31 +6,59 @@
     <title>Class Attendance System</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background: #f4f7f6; }
+        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f4f7f6; }
         .container { max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { color: #2c3e50; }
-        #master-qr { margin: 20px auto; display: flex; justify-content: center; padding: 10px; border: 2px solid #3498db; border-radius: 15px; background: white; min-height: 200px; align-items: center; }
-        input { width: 90%; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        #master-qr { margin: 20px auto; display: flex; justify-content: center; padding: 10px; border: 2px solid #3498db; border-radius: 15px; min-height: 200px; align-items: center; }
+        input { width: 100%; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
         button { background-color: #2ecc71; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; }
-        #status { display: none; color: #27ae60; font-weight: bold; margin-top: 15px; padding: 10px; background: #e8f5e9; border-radius: 10px; }
+        #status { display: none; color: #27ae60; font-weight: bold; margin-top: 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
     <h1>Class Attendance</h1>
-    <p>Scan to Join & Type Your Name</p>
-    
     <div id="master-qr">Generating QR Code...</div>
-
-    <div id="status">✅ Attendance Sent to Google Sheets!</div>
-    
+    <div id="status">✅ Attendance Sent!</div>
     <input type="text" id="studentName" placeholder="Enter Your Full Name">
     <button onclick="submitAttendance()">SUBMIT ATTENDANCE</button>
 </div>
 
 <script>
-    // 1. AUTO-GENERATE THE MASTER QR
+    // 1. Generate the Master QR
     function generateQR() {
         const qrBox = document.getElementById("master-qr");
-        const
+        const currentUrl = window.location.origin + window.location.pathname;
+        if (typeof QRCode !== "undefined") {
+            qrBox.innerHTML = "";
+            new QRCode(qrBox, { text: currentUrl, width: 200, height: 200 });
+        } else { setTimeout(generateQR, 1000); }
+    }
+    generateQR();
+
+    // 2. Submit to Google Sheets
+    async function submitAttendance() {
+        const nameInput = document.getElementById('studentName');
+        const name = nameInput.value.trim();
+        if (!name) return alert("Please type your name!");
+
+        const scriptURL = 'https://script.google.com/macros/s/AKfycbwUzvDtWs0E6ADAoRlBEqPgxxueDDtZvQt4gS4ERJ8X_HAcFCe6HTArRMpdyA3pRZlb/exec';
+
+        try {
+            await fetch(scriptURL, {
+                method: 'POST',
+                mode: 'no-cors',
+                body: JSON.stringify({ name: name })
+            });
+            nameInput.value = "";
+            document.getElementById('status').style.display = "block";
+            setTimeout(() => { document.getElementById('status').style.display = "none"; }, 3000);
+        } catch (error) {
+            alert("Error saving data. Check connection.");
+        }
+    }
+</script>
+
+</body>
+</html>
+Write to
