@@ -3,51 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Attendance System</title>
+    <title>QR Attendance Pro</title>
     <script src="https://unpkg.com/html5-qrcode"></script>
     <script src="qrcode.min.js"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        #reader { width: 300px; margin: 20px auto; border: 2px solid #333; }
-        #qrcode { margin-top: 20px; display: flex; justify-content: center; }
-        input, button { padding: 10px; margin: 5px; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background: #f4f7f6; }
+        .container { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        #reader { width: 100%; margin: 20px 0; border-radius: 10px; overflow: hidden; }
+        #qrcode { margin: 20px auto; display: flex; justify-content: center; }
+        input { width: 80%; padding: 12px; border: 1px solid #ddd; border-radius: 5px; margin-bottom: 10px; }
+        button { background: #28a745; color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        #status { color: #d9534f; margin-top: 15px; font-weight: bold; }
+        .history { text-align: left; margin-top: 20px; font-size: 0.9em; }
     </style>
 </head>
 <body>
 
-    <h2>1. Generate Attendance QR</h2>
-    <input type="text" id="qr-text" placeholder="Enter Student Name/ID">
-    <button onclick="generateQR()">Create Code</button>
-    <div id="qrcode"></div>
+<div class="container">
+    <h1>QR Attendance</h1>
+    
+    <div id="generator">
+        <input type="text" id="qr-input" placeholder="Enter Full Name">
+        <button onclick="generateQR()">Create Member QR</button>
+        <div id="qrcode"></div>
+        <p style="font-size: 0.8em; color: #666;">Scan this with any camera to check-in!</p>
+    </div>
 
     <hr>
 
-    <h2>2. Scan for Attendance</h2>
+    <h3>Scanner</h3>
     <div id="reader"></div>
-    <p id="result" style="font-weight: bold; color: green;"></p>
+    <div id="status">Waiting for scan...</div>
+    
+    <div class="history" id="attendance-log">
+        <strong>Today's Log:</strong><br>
+    </div>
+</div>
 
-    <script>
-        // --- GENERATOR LOGIC ---
-        function generateQR() {
-            var text = document.getElementById("qr-text").value;
-            document.getElementById("qrcode").innerHTML = "";
-            new QRCode(document.getElementById("qrcode"), text);
+<script>
+    const myRepoUrl = "https://santillanjeleonmigz-arch.github.io/QR_Attendance/";
+
+    // 1. GENERATE: Creates a link that a normal phone camera recognizes
+    function generateQR() {
+        const name = document.getElementById("qr-input").value;
+        if(!name) return alert("Please enter a name");
+        
+        // This makes the QR a "Link" instead of just text
+        const attendanceUrl = myRepoUrl + "?checkin=" + encodeURIComponent(name);
+        
+        document.getElementById("qrcode").innerHTML = "";
+        new QRCode(document.getElementById("qrcode"), {
+            text: attendanceUrl,
+            width: 180,
+            height: 180
+        });
+    }
+
+    // 2. AUTO-LOG: Runs when a normal phone camera opens the link
+    window.onload = function() {
+        const params = new URLSearchParams(window.location.search);
+        const nameToLog = params.get('checkin');
+        if (nameToLog) {
+            logAttendance(nameToLog);
+            // Clean the URL so refreshing doesn't log them again
+            window.history.replaceState({}, document.title, window.location.pathname);
         }
+    };
 
-        // --- SCANNER LOGIC ---
-        function onScanSuccess(decodedText, decodedResult) {
-            // When a code is scanned, show the name on the screen
-            document.getElementById("result").innerText = "Attendance Marked: " + decodedText;
-            
-            // Optional: Alert the user
-            alert("Check-in successful for: " + decodedText);
-        }
-
-        let html5QrcodeScanner = new Html5QrcodeScanner(
-            "reader", { fps: 10, qrbox: 250 }
-        );
-        html5QrcodeScanner.render(onScanSuccess);
-    </script>
-</body>
-</html>
-
+    function logAttendance(name) {
+        const time = new Date().toLocaleTimeString();
+        document.getElementById("status").innerText = "SUCCESS: " + name;
+        document.getElementById("status").style.color = "#28a745";
+        
+        const log = document.getElementById("attendance-log");
+        log.innerHTML += `<div>✅ ${name
