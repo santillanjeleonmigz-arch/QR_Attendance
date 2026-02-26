@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>QR Attendance (1 QR Code)</title>
+<script src="qrcode.min.js"></script>
+<style>
+body { font-family: Arial; text-align:center; background:#eef2f3;}
+.container { background:white; padding:20px; width:400px; margin:30px auto; border-radius:10px; box-shadow:0 0 10px gray;}
+input { padding:10px; width:90%; margin-bottom:10px;}
+button { padding:10px; width:100%; margin-top:5px; background:#4CAF50; color:white; border:none; border-radius:5px; cursor:pointer;}
+table { margin:20px auto; border-collapse:collapse; width:90%;}
+table, th, td { border:1px solid gray;}
+th, td { padding:8px;}
+#qrcode { margin: 20px auto; }
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>QR Attendance</h2>
+<p>Scan the QR code below, then enter your name to mark attendance</p>
+<div id="qrcode"></div>
+<input type="text" id="name" placeholder="Enter your name">
+<button onclick="markAttendance()">Submit Attendance</button>
+</div>
+
+<h3>Attendance List</h3>
+<table id="attendanceTable">
+<tr><th>Name</th><th>Date</th><th>Time</th></tr>
+</table>
+
+<button onclick="downloadCSV()">Download CSV</button>
+
+<script>
+// Generate a single QR code for all students
+new QRCode(document.getElementById("qrcode"), {
+    text: "QR_ATTENDANCE_2026", // You can customize this text
+    width: 200,
+    height: 200
+});
+
+let attendance = [];
+
+function markAttendance() {
+    let name = document.getElementById("name").value.trim();
+    if(name===""){ alert("Please enter your name"); return; }
+
+    // Prevent duplicate attendance
+    if(attendance.some(r => r.name.toLowerCase()===name.toLowerCase())){
+        alert(name + " already marked attendance!");
+        return;
+    }
+
+    let now = new Date();
+    let date = now.toLocaleDateString();
+    let time = now.toLocaleTimeString();
+
+    attendance.push({name, date, time});
+    updateTable();
+
+    alert("Attendance recorded for " + name + " at " + date + " " + time);
+    document.getElementById("name").value="";
+}
+
+function updateTable(){
+    let table = document.getElementById("attendanceTable");
+    table.innerHTML = "<tr><th>Name</th><th>Date</th><th>Time</th></tr>";
+    attendance.forEach(r=>{
+        table.innerHTML += `<tr><td>${r.name}</td><td>${r.date}</td><td>${r.time}</td></tr>`;
+    });
+}
+
+function downloadCSV(){
+    let csv="Name,Date,Time\n";
+    attendance.forEach(r=>{
+        csv += `${r.name},${r.date},${r.time}\n`;
+    });
+
+    let blob = new Blob([csv], {type:'text/csv'});
+    let link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "attendance.csv";
+    link.click();
+}
+</script>
+
+</body>
+</html>
