@@ -3,75 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Class Attendance</title>
+    <title>Class Attendance System</title>
+    
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
     <style>
-        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background: #f0f2f5; color: #333; }
-        .card { max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
-        h1 { color: #1a73e8; }
-        #master-qr { margin: 20px auto; display: flex; justify-content: center; padding: 10px; background: white; border: 2px solid #1a73e8; border-radius: 10px; width: fit-content; }
-        input { width: 90%; padding: 15px; margin: 20px 0 10px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
-        button { background: #28a745; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; }
-        #log { margin-top: 30px; text-align: left; background: #eee; padding: 15px; border-radius: 10px; font-size: 14px; }
-        .success-msg { color: #28a745; font-weight: bold; margin-bottom: 10px; display: none; }
+        body { font-family: 'Segoe UI', Arial, sans-serif; text-align: center; background: #f4f7f9; padding: 20px; }
+        .card { max-width: 420px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; margin-bottom: 5px; }
+        #master-qr { margin: 25px auto; display: flex; justify-content: center; padding: 15px; background: #fff; border: 3px solid #1a73e8; border-radius: 15px; width: fit-content; }
+        input { width: 85%; padding: 15px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; outline: none; }
+        input:focus { border-color: #1a73e8; }
+        button { background: #28a745; color: white; border: none; padding: 15px; border-radius: 10px; width: 92%; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; }
+        button:hover { background: #218838; }
+        #attendance-log { margin-top: 30px; text-align: left; background: #fafafa; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
+        .log-entry { padding: 8px 0; border-bottom: 1px solid #eee; color: #555; font-size: 14px; }
+        .success-banner { background: #d4edda; color: #155724; padding: 10px; border-radius: 10px; margin-bottom: 15px; display: none; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div class="card">
     <h1>Class Attendance</h1>
-    <p>Scan the code below to sign in</p>
+    <p style="color: #666;">Scan to join, then enter your name.</p>
     
     <div id="master-qr"></div>
-    <p style="font-size: 12px; color: #666;">Site URL: <span id="site-link"></span></p>
 
-    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
-
-    <div id="status-msg" class="success-msg">✅ Attendance Recorded!</div>
+    <div id="success-msg" class="success-banner">Check-in Successful!</div>
     
-    <input type="text" id="studentName" placeholder="Enter Your Full Name">
-    <button onclick="submitAttendance()">Submit Attendance</button>
+    <input type="text" id="studentName" placeholder="Type your Full Name here...">
+    <button onclick="logAttendance()">Submit Attendance</button>
 
-    <div id="log">
-        <strong>Today's Attendance:</strong>
-        <div id="list"></div>
+    <div id="attendance-log">
+        <strong>Today's Participants:</strong>
+        <div id="log-list"></div>
     </div>
 </div>
 
 <script>
-    // 1. AUTO-GENERATE THE MASTER QR CODE
-    const currentUrl = window.location.href.split('?')[0]; // Gets your GitHub link
-    document.getElementById('site-link').innerText = currentUrl;
+    // 1. Generate the Master QR pointing to THIS page
+    // We remove any parameters to keep the link clean for cameras
+    const cleanUrl = window.location.origin + window.location.pathname;
 
     new QRCode(document.getElementById("master-qr"), {
-        text: currentUrl,
-        width: 200,
-        height: 200
+        text: cleanUrl,
+        width: 220,
+        height: 220,
+        colorDark : "#000000",
+        colorLight : "#ffffff",
+        correctLevel : QRCode.CorrectLevel.H
     });
 
-    // 2. SUBMIT LOGIC
-    function submitAttendance() {
-        const name = document.getElementById('studentName').value;
-        const list = document.getElementById('list');
-        const msg = document.getElementById('status-msg');
+    // 2. Logic to handle the Submit Button
+    function logAttendance() {
+        const nameInput = document.getElementById('studentName');
+        const logList = document.getElementById('log-list');
+        const successBanner = document.getElementById('success-msg');
+        
+        const name = nameInput.value.trim();
 
         if (!name) {
-            alert("Please enter your name!");
+            alert("Please enter your name before submitting.");
             return;
         }
 
-        const time = new Date().toLocaleTimeString();
+        // Add name and time to the list
+        const now = new Date();
+        const timestamp = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        
         const entry = document.createElement('div');
-        entry.style.padding = "5px 0";
-        entry.innerHTML = • <strong>${name}</strong> - ${time};
+        entry.className = 'log-entry';
+        entry.innerHTML = ✅ <strong>${name}</strong> <span style="float:right; color:#999;">${timestamp}</span>;
         
-        list.prepend(entry); // Add to the top of the list
-        
-        // Show success message and clear input
-        msg.style.display = "block";
-        document.getElementById('studentName').value = "";
-        
-        setTimeout(() => { msg.style.display = "none"; }, 3000);
+        logList.prepend(entry); // Newest names at the top
+
+        // UI Feedback
+        nameInput.value = "";
+        successBanner.style.display = "block";
+        setTimeout(() => { successBanner.style.display = "none"; }, 3000);
     }
 </script>
 
