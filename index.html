@@ -3,59 +3,77 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QR Attendance</title>
+    <title>Class Attendance</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; background: #f0f0f0; }
-        .card { max-width: 400px; margin: auto; background: white; padding: 20px; border-radius: 10px; shadow: 5px; }
-        #qrcode { margin: 20px auto; display: flex; justify-content: center; min-height: 180px; border: 1px solid #ddd; }
-        input { width: 80%; padding: 10px; margin-bottom: 10px; }
-        button { padding: 10px 20px; background: #007bff; color: white; border: none; cursor: pointer; }
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background: #f0f2f5; color: #333; }
+        .card { max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; }
+        #master-qr { margin: 20px auto; display: flex; justify-content: center; padding: 10px; background: white; border: 2px solid #1a73e8; border-radius: 10px; width: fit-content; }
+        input { width: 90%; padding: 15px; margin: 20px 0 10px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; }
+        button { background: #28a745; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; }
+        #log { margin-top: 30px; text-align: left; background: #eee; padding: 15px; border-radius: 10px; font-size: 14px; }
+        .success-msg { color: #28a745; font-weight: bold; margin-bottom: 10px; display: none; }
     </style>
 </head>
 <body>
 
 <div class="card">
-    <h1>Attendance Pro</h1>
-    <input type="text" id="userInput" placeholder="Enter Name">
-    <button onclick="makeQR()">Create QR Code</button>
+    <h1>Class Attendance</h1>
+    <p>Scan the code below to sign in</p>
     
-    <div id="qrcode"></div>
+    <div id="master-qr"></div>
+    <p style="font-size: 12px; color: #666;">Site URL: <span id="site-link"></span></p>
+
+    <hr style="border: 0; border-top: 1px solid #eee; margin: 20px 0;">
+
+    <div id="status-msg" class="success-msg">✅ Attendance Recorded!</div>
     
-    <hr>
-    <h3>Scanner</h3>
-    <div id="scanner-view"></div>
-    <div id="log"></div>
+    <input type="text" id="studentName" placeholder="Enter Your Full Name">
+    <button onclick="submitAttendance()">Submit Attendance</button>
+
+    <div id="log">
+        <strong>Today's Attendance:</strong>
+        <div id="list"></div>
+    </div>
 </div>
 
 <script>
-    // 1. GENERATE
-    function makeQR() {
-        var name = document.getElementById("userInput").value;
-        var qrDiv = document.getElementById("qrcode");
-        qrDiv.innerHTML = ""; // Clear old one
+    // 1. AUTO-GENERATE THE MASTER QR CODE
+    const currentUrl = window.location.href.split('?')[0]; // Gets your GitHub link
+    document.getElementById('site-link').innerText = currentUrl;
+
+    new QRCode(document.getElementById("master-qr"), {
+        text: currentUrl,
+        width: 200,
+        height: 200
+    });
+
+    // 2. SUBMIT LOGIC
+    function submitAttendance() {
+        const name = document.getElementById('studentName').value;
+        const list = document.getElementById('list');
+        const msg = document.getElementById('status-msg');
+
+        if (!name) {
+            alert("Please enter your name!");
+            return;
+        }
+
+        const time = new Date().toLocaleTimeString();
+        const entry = document.createElement('div');
+        entry.style.padding = "5px 0";
+        entry.innerHTML = • <strong>${name}</strong> - ${time};
         
-        if(!name) { alert("Type a name!"); return; }
-
-        // This creates the QR
-        new QRCode(qrDiv, {
-            text: "https://santillanjeleonmigz-arch.github.io/QR_Attendance/?id=" + name,
-            width: 180,
-            height: 180
-        });
+        list.prepend(entry); // Add to the top of the list
+        
+        // Show success message and clear input
+        msg.style.display = "block";
+        document.getElementById('studentName').value = "";
+        
+        setTimeout(() => { msg.style.display = "none"; }, 3000);
     }
-
-    // 2. SCANNER
-    function onScanSuccess(text) {
-        alert("Scanned: " + text);
-        document.getElementById("log").innerHTML += "<div>" + text + "</div>";
-    }
-
-    var html5QrcodeScanner = new Html5QrcodeScanner("scanner-view", { fps: 10, qrbox: 250 });
-    html5QrcodeScanner.render(onScanSuccess);
 </script>
 
 </body>
-</html
-
+</html>
