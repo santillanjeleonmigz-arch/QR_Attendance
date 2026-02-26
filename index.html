@@ -1,46 +1,93 @@
-<script>
-    // 1. AUTO-GENERATE THE MASTER QR CODE
-    function startSystem() {
-        const currentUrl = window.location.origin + window.location.pathname;
-        const qrContainer = document.getElementById("master-qr");
-        
-        // Clear the loading circle
-        qrContainer.innerHTML = "";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Class Attendance</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background: #f0f2f5; }
+        .card { max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        h1 { color: #1a73e8; }
+        #master-qr { margin: 20px auto; display: flex; justify-content: center; padding: 10px; background: white; border: 2px solid #1a73e8; border-radius: 10px; min-height: 200px; align-items: center; font-weight: bold; color: #666; }
+        input { width: 90%; padding: 15px; margin: 20px 0 10px 0; border: 1px solid #ddd; border-radius: 10px; font-size: 16px; box-sizing: border-box; }
+        button { background: #28a745; color: white; border: none; padding: 15px; border-radius: 10px; width: 100%; font-weight: bold; font-size: 16px; cursor: pointer; }
+        #log { margin-top: 30px; text-align: left; background: #fff; padding: 15px; border-radius: 10px; border: 1px solid #eee; }
+        .entry { padding: 8px; border-bottom: 1px solid #eee; font-size: 14px; }
+        .success-flash { color: #28a745; font-weight: bold; margin-bottom: 10px; display: none; }
+    </style>
+</head>
+<body>
 
-        new QRCode(qrContainer, {
-            text: currentUrl,
-            width: 200,
-            height: 200,
-            correctLevel: QRCode.CorrectLevel.H
-        });
-        
-        console.log("System Ready at: " + currentUrl);
+<div class="card">
+    <h1>Class Attendance</h1>
+    <p>Scan to Join & Type Your Name</p>
+    
+    <div id="master-qr">Generating QR...</div>
+
+    <div id="msg" class="success-flash">✅ Added to Attendance!</div>
+    
+    <input type="text" id="studentName" placeholder="Enter Full Name">
+    <button onclick="submitAttendance()">SUBMIT ATTENDANCE</button>
+
+    <div id="log">
+        <strong>Today's Participants:</strong>
+        <div id="attendanceEntries"></div>
+    </div>
+</div>
+
+<script>
+    // This part makes the QR code for your specific GitHub URL
+    function generateMasterQR() {
+        const qrBox = document.getElementById("master-qr");
+        const mySiteUrl = window.location.origin + window.location.pathname;
+
+        if (typeof QRCode !== "undefined") {
+            qrBox.innerHTML = ""; // Clear the loading text
+            new QRCode(qrBox, {
+                text: mySiteUrl,
+                width: 200,
+                height: 200,
+                correctLevel: QRCode.CorrectLevel.H
+            });
+            console.log("Master QR Ready!");
+        } else {
+            // If library isn't ready yet, wait 1 second and try again
+            setTimeout(generateMasterQR, 1000);
+        }
     }
 
-    // Wait 2 seconds after page load to ensure the library is ready
-    window.onload = function() {
-        setTimeout(startSystem, 2000);
-    };
+    // Start the generation process
+    generateMasterQR();
 
-    // 2. SUBMIT LOGIC (Manual input from students)
+    // This part handles the student typing their name
     function submitAttendance() {
-        const nameInput = document.getElementById('studentName');
-        const list = document.getElementById('list');
-        const name = nameInput.value.trim();
+        const nameField = document.getElementById('studentName');
+        const list = document.getElementById('attendanceEntries');
+        const flash = document.getElementById('msg');
+        const name = nameField.value.trim();
 
         if (!name) {
-            alert("Please enter your name!");
+            alert("Please type your name!");
             return;
         }
 
-        const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const entry = document.createElement('div');
-        entry.style.padding = "8px 0";
-        entry.style.borderBottom = "1px solid #ddd";
-        entry.innerHTML = ✅ <strong>${name}</strong> <span style="float:right; color:gray;">${time}</span>;
+        const now = new Date();
+        const time = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         
-        list.prepend(entry);
-        nameInput.value = ""; // Clear the box for the next person
+        const div = document.createElement('div');
+        div.className = "entry";
+        div.innerHTML = `<strong>${name}</strong> <span style="float:right; color:#999;">${time}</span>`;
+        
+        list.prepend(div); // Add newest names to the top
+        
+        // Success feedback
+        nameField.value = "";
+        flash.style.display = "block";
+        setTimeout(() => { flash.style.display = "none"; }, 3000);
     }
 </script>
-Sen
+
+</body>
+</html>
+
